@@ -1,39 +1,66 @@
+from abc import ABC, abstractmethod
 
-# Patrones de Diseño de Software
+# --- 1. PATRÓN SINGLETON (Configuración / Conexión Central)
+class ConfiguracionRefugio:
+    _instancia = None
+    
+    def __new__(cls):
+        if cls._instancia is None:
+            cls._instancia = super(ConfiguracionRefugio, cls).__new__(cls)
+            cls._instancia.nombre = "Refugio Patitas Felices"
+        return cls._instancia
 
-## Sistema de Control de Rescate y Adopción Animal
+# --- 2. PATRÓN OBSERVER (Notificaciones a Voluntarios)
+class Observador(ABC):
+    @abstractmethod
+    case actualizar(self, mensaje: str):
+        pass
 
-### 1. Patrón Singleton
+class Voluntario(Observador):
+    def __init__(self, nombre):
+        self.nombre = nombre
+    def actualizar(self, mensaje):
+        print(f"[Alerta para {self.nombre}]: {mensaje}")
 
-Propósito: garantizar que exista una única instancia del gestor central de casos.
+class CasoRescate:
+    def __init__(self):
+        self._observadores = []
+        self._estado = "Registrado"
 
-Aplicación: se utilizará en la clase GestorCasos para centralizar la administración de los registros de rescate y evitar la creación de múltiples gestores independientes.
+    def agregar_observador(self, obs: Observador):
+        self._observadores.append(obs)
 
-### 2. Patrón Observer
+    def notificar(self, mensaje):
+        for obs in self._observadores:
+            obs.actualizar(mensaje)
 
-Propósito: establecer un mecanismo de notificaciones automáticas entre los componentes del sistema.
+    def cambiar_estado(self, nuevo_estado):
+        self._estado = nuevo_estado
+        self.notificar(f"El caso ha cambiado de estado a: {self._estado}")
 
-Aplicación: cuando se registre un nuevo caso de rescate, el sistema notificará a los voluntarios y responsables correspondientes para que puedan conocer y atender el caso.
+# --- 3. PATRÓN FACTORY METHOD (Creación de Expedientes por Especie)
+class Expediente(ABC):
+    @abstractmethod
+    def mostrar_detalles(self):
+        pass
 
-### 3. Patrón Factory Method
+class ExpedientePerro(Expediente):
+    def mostrar_detalles(self):
+        return "Expediente Canino: Requiere vacuna antirrábica y evaluación de sociabilidad."
 
-Propósito: facilitar la creación de objetos sin depender directamente de sus clases concretas.
+class ExpedienteSilvestre(Expediente):
+    def mostrar_detalles(self):
+        return "Expediente Fauna Silvestre: Requiere cuarentena estricta y permiso ambiental."
 
-Aplicación: la clase ExpedienteFactory permitirá generar expedientes específicos según la especie del animal, como perro, gato o fauna silvestre.
+class ExpedienteFactory(ABC):
+    @abstractmethod
+    def crear_expediente(self) -> Expediente:
+        pass
 
-### 4. Patrón MVC
+class PerroFactory(ExpedienteFactory):
+    def crear_expediente(self) -> Expediente:
+        return ExpedientePerro()
 
-Propósito: separar la interfaz, el procesamiento de las solicitudes y la gestión de los datos.
-
-Aplicación:
-- Modelo: administra los datos y las reglas del sistema.
-- Vista: presenta la información al usuario.
-- Controlador: recibe las solicitudes y coordina las operaciones.
-
-### 5. Justificación de los patrones
-
-La implementación de estos patrones permitirá organizar mejor el sistema, reducir el acoplamiento entre sus componentes, facilitar el mantenimiento y permitir futuras ampliaciones sin modificar toda la estructura del software.
-
-### 6. Conclusión
-
-Los patrones de diseño seleccionados contribuyen a desarrollar una arquitectura más ordenada, reutilizable y escalable, facilitando la gestión de los procesos de rescate y adopción animal.
+class SilvestreFactory(ExpedienteFactory):
+    def crear_expediente(self) -> Expediente:
+        return ExpedienteSilvestre()
